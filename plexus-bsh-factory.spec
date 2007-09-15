@@ -40,7 +40,7 @@
 
 Name:           %{parent}-%{subname}
 Version:        1.0
-Release:        %mkrel 0.1.a7s.2.2.1
+Release:        %mkrel 0.1.a7s.2.2.2
 Epoch:          0
 Summary:        Plexus Bsh component factory
 License:        MIT-Style
@@ -89,8 +89,6 @@ Requires(postun):  jpackage-utils >= 0:1.7.2
 
 %if %{gcj_support}
 BuildRequires:     java-gcj-compat-devel
-Requires(post):    java-gcj-compat
-Requires(postun):  java-gcj-compat
 %endif
 
 %description
