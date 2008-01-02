@@ -54,6 +54,7 @@ Source2:        %{name}-build.xml
 
 Patch1:         %{name}-encodingfix.patch
 
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %if ! %{gcj_support}
 BuildArch:      noarch
