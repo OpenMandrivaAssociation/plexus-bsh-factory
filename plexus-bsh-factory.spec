@@ -28,8 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%define _with_gcj_support 1
-%define gcj_support %{?_with_gcj_support:1}%{!?_with_gcj_support:%{?_without_gcj_support:0}%{!?_without_gcj_support:%{?_gcj_support:%{_gcj_support}}%{!?_gcj_support:0}}}
+%define gcj_support 0
 
 %define _without_maven 1
 %define with_maven %{!?_without_maven:1}%{?_without_maven:0}
@@ -40,7 +39,7 @@
 
 Name:           %{parent}-%{subname}
 Version:        1.0
-Release:        %mkrel 0.1.a7s.2.2.3
+Release:        %mkrel 0.1.a7s.2.2.4
 Epoch:          0
 Summary:        Plexus Bsh component factory
 License:        MIT-Style
@@ -60,7 +59,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch:      noarch
 %endif
 
-BuildRequires:     java-rpmbuild >= 0:1.7.2
+BuildRequires:     java-rpmbuild 
 %if %{with_maven}
 BuildRequires:     maven2 >= 2.0.4-9
 BuildRequires:     maven2-plugin-compiler
@@ -163,9 +162,7 @@ install -pm 644 \
                 $RPM_BUILD_ROOT%{_javadocdir}/%{name} # ghost symlink
 %endif
 
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
-%endif
+%{gcj_compile}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -188,11 +185,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_javadir}/plexus
 %{_datadir}/maven2
 %config(noreplace) %{_mavendepmapfragdir}/*
-
-%if %{gcj_support}
-%dir %attr(-,root,root) %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/bsh-factory-1.0.jar.*
-%endif
+%{gcj_files}
 
 %if %{with_maven}
 %files javadoc
