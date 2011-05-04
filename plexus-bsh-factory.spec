@@ -39,7 +39,7 @@
 
 Name:           %{parent}-%{subname}
 Version:        1.0
-Release:        %mkrel 0.1.a7s.2.2.7
+Release:        %mkrel 0.1.a7s.2.2.8
 Epoch:          0
 Summary:        Plexus Bsh component factory
 License:        MIT-Style
