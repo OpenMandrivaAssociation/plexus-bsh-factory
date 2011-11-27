@@ -36,7 +36,7 @@
 
 Name:           %{parent}-%{subname}
 Version:        1.0
-Release:        0.5.a7s.1.11
+Release:        0.5.a7s.1.13
 Summary:        Plexus Bsh component factory
 License:        MIT
 Group:          Development/Java
