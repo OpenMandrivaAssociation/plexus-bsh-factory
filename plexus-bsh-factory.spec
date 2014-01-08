@@ -1,3 +1,5 @@
+usr/lib/rpm/javapackages-tools.sh prov
+usr/lib/rpm/javapackages-tools.sh prov
 %{?_javapackages_macros:%_javapackages_macros}
 %define parent plexus
 %define subname bsh-factory
@@ -47,6 +49,10 @@ cp -p %{SOURCE3} .
 
 %install
 %mvn_install
+%if 0%{?fedora}
+%else
+sed -i "s|1.0-alpha-7|1.0.alpha.7|" %{buildroot}%{_mavendepmapfragdir}/*
+%endif
 
 %files -f .mfiles
 %doc plexus-bsh-factory-license.txt
