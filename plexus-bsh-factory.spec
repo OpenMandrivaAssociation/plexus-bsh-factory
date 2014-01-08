@@ -1,172 +1,146 @@
-# Copyright (c) 2000-2005, JPackage Project
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name of the JPackage Project nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
-%define gcj_support 0
-
-%define _without_maven 1
-%define with_maven %{!?_without_maven:1}%{?_without_maven:0}
-%define without_maven %{?_without_maven:1}%{!?_without_maven:0}
-
+%{?_javapackages_macros:%_javapackages_macros}
 %define parent plexus
 %define subname bsh-factory
 
-Summary:	Plexus Bsh component factory
-Name:		%{parent}-%{subname}
-Version:	1.0
-Release:	0.1.a7s.2.2.9
-License:	MIT-Style
-Group:		Development/Java
-Url:		http://plexus.codehaus.org/
-Source0:	%{name}-src.tar.gz
+Name:           %{parent}-%{subname}
+Version:        1.0
+Release:        0.13.a7.0%{?dist}
+Epoch:          0
+Summary:        Plexus Bsh component factory
+License:        MIT
+URL:            http://plexus.codehaus.org/
+BuildArch:      noarch
 # svn export svn://svn.plexus.codehaus.org/plexus/tags/plexus-bsh-factory-1.0-alpha-7-SNAPSHOT plexus-bsh-factory/
 # tar czf plexus-bsh-factory-src.tar.gz plexus-bsh-factory/
-Source1:	%{name}-jpp-depmap.xml
-Source2:	%{name}-build.xml
-Patch1:		%{name}-encodingfix.patch
-%if ! %{gcj_support}
-BuildArch:	noarch
-%else
-BuildRequires:	java-gcj-compat-devel
-%endif
-BuildRequires:	java-rpmbuild 
-%if %{with_maven}
-BuildRequires:	maven2 >= 2.0.4-9
-BuildRequires:	maven2-plugin-compiler
-BuildRequires:	maven2-plugin-install
-BuildRequires:	maven2-plugin-jar
-BuildRequires:	maven2-plugin-javadoc
-BuildRequires:	maven2-plugin-release
-BuildRequires:	maven2-plugin-resources
-BuildRequires:	maven2-plugin-surefire
-BuildRequires:	maven2-common-poms >= 1.0-2
-%else
-BuildRequires:	ant
-%endif
-BuildRequires:	bsh
-BuildRequires:	classworlds
-BuildRequires:	plexus-container-default
-BuildRequires:	plexus-utils
-Requires:	bsh
-Requires:	classworlds
-Requires:	plexus-container-default
-Requires:	plexus-utils
-Requires(post,postun):	jpackage-utils >= 0:1.7.2
+Source0:        %{name}-src.tar.gz
+Source3:	plexus-bsh-factory-license.txt
+
+Patch1:         %{name}-encodingfix.patch
+Patch2:         0001-Migrate-to-plexus-containers-container-default.patch
+
+BuildRequires:  maven-local
+BuildRequires:  mvn(bsh:bsh)
+BuildRequires:  mvn(classworlds:classworlds)
+BuildRequires:  mvn(org.codehaus.plexus:plexus-container-default)
+BuildRequires:  mvn(org.codehaus.plexus:plexus-utils)
 
 %description
 Bsh component class creator for Plexus.
 
-%if %{with_maven}
 %package javadoc
-Summary:	Javadoc for %{name}
-Group:		Documentation
+Summary:        Javadoc for %{name}
 
 %description javadoc
 Javadoc for %{name}.
-%endif
 
 %prep
-%setup -qn %{name}
-%apply_patches
+%setup -q -n %{name}
 
-%if %{without_maven}
-    cp -p %{SOURCE2} build.xml
-%endif
+%patch1 -b .sav
+%patch2 -p1
+cp release-pom.xml pom.xml
+cp -p %{SOURCE3} .
 
 %build
-%if %{with_maven}
-    export MAVEN_REPO_LOCAL=$(pwd)/.m2/repository
-    mkdir -p $MAVEN_REPO_LOCAL
-
-    mvn-jpp \
-        -e \
-        -Dmaven.repo.local=$MAVEN_REPO_LOCAL \
-        install javadoc:javadoc
-
-%else
-    mkdir lib
-    build-jar-repository \
-                             -s -p \
-                             lib bsh classworlds \
-                             plexus/container-default \
-                             plexus/utils
-    %{ant} -Dmaven.mode.offline=true
-%endif
+%mvn_file  : %{parent}/%{subname}
+%mvn_build -f
 
 %install
-# jars
-install -d -m 755 %{buildroot}%{_javadir}/plexus
-install -pm 644 target/*.jar \
-      %{buildroot}%{_javadir}/%{parent}/%{subname}-%{version}.jar
-%add_to_maven_depmap org.codehaus.plexus %{name} 1.0-alpha-7 JPP/%{parent} %{subname}
+%mvn_install
 
-(cd %{buildroot}%{_javadir}/%{parent} && for jar in *-%{version}*; \
-  do ln -sf ${jar} `echo $jar| sed  "s|-%{version}||g"`; done)
+%files -f .mfiles
+%doc plexus-bsh-factory-license.txt
 
-# pom
-install -d -m 755 %{buildroot}%{_datadir}/maven2/poms
-install -pm 644 \
-  pom.xml %{buildroot}%{_datadir}/maven2/poms/JPP.%{parent}-%{subname}.pom
+%files javadoc -f .mfiles-javadoc
+%doc plexus-bsh-factory-license.txt
 
-# javadoc
-%if %{with_maven}
-    install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}
+%changelog
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.13.a7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
-    cp -pr target/site/apidocs/* \
-        %{buildroot}%{_javadocdir}/%{name}-%{version}/
+* Mon Apr 29 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:1.0-0.12.a7
+- Simplify build dependencies
+- Update to current packaging guidelines
 
-    ln -s %{name}-%{version} \
-                %{buildroot}%{_javadocdir}/%{name} # ghost symlink
-%endif
+* Wed Apr 10 2013 Michal Srb <msrb@redhat.com> - 0:1.0-0.11.a7
+- Port to plexus-containers-container-default
 
-%{gcj_compile}
+* Wed Feb 06 2013 Java SIG <java-devel@lists.fedoraproject.org> - 0:1.0-0.10.a7
+- Update for https://fedoraproject.org/wiki/Fedora_19_Maven_Rebuild
+- Replace maven BuildRequires with maven-local
 
-%post
-%if %{gcj_support}
-%{update_gcjdb}
-%endif
-%update_maven_depmap
+* Wed Jan 23 2013 Michal Srb <msrb@redhat.com> - 0:1.0-0.9.a7
+- Build with xmvn
 
-%postun
-%if %{gcj_support}
-%{clean_gcjdb}
-%endif
-%update_maven_depmap
+* Thu Nov 22 2012 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:1.0-0.8.a7
+- Cleanup whole spec file (#878828)
+- Build/install javadoc package (#878134, #878135)
 
-%files
-%{_javadir}/plexus
-%{_datadir}/maven2
-%config(noreplace) %{_mavendepmapfragdir}/*
-%{gcj_files}
+* Thu Nov 15 2012 Tom Callaway <spot@fedoraproject.org> - 0:1.0-0.7.a7s.1.13
+- fix incomplete license.txt
 
-%if %{with_maven}
-%files javadoc
-%doc %{_javadocdir}/*
-%endif
+* Tue Aug 21 2012 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:1.0-0.7.a7s.1.12
+- Don't own _mavenfragdir
 
+* Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.7.a7s.1.11
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
+* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.6.a7s.1.11
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.5.a7s.1.11
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Fri Feb 12 2010 Alexander Kurtakov <akurtako@redhat.com> 0:1.0-0.4.a7s.1.11
+- Drop gcj_support.
+- Build with ant. Fixes rhbz#539101.
+
+* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.4.a7s.1.10
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Mon Mar 23 2009 Deepak Bhole <dbhole@redhat.com> - 1.0-0.3.a7s.1.10
+- Rebuild with maven
+
+* Thu Feb 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:1.0-0.3.a7s.1.9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
+
+* Wed Aug 13 2008 Deepak Bhole <dbhole@redhat.com> 1.0-0.2.a7s.1.9
+- Build for ppc64
+
+* Wed Jul  9 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.0-0.2.a7s.1.8
+- add license information from upstream
+
+* Wed Jul  9 2008 Tom "spot" Callaway <tcallawa@redhat.com> 1.0-0.2.a7s.1.7
+- drop repotag
+- label license as Unknown (hopefully, upstream will get back to us before the sun explodes)
+
+* Thu Feb 28 2008 Deepak Bhole <dbhole@redhat.com> 1.0-0.2.a7s.1jpp.6
+- Rebuild
+
+* Fri Sep 21 2007 Deepak Bhole <dbhole@redhat.com> 1.0-0.1.a7s.2jpp.5
+- ExcludeArch ppc64
+
+* Mon Sep 10 2007 Deepak Bhole <dbhole@redhat.com> 1.0-0.1.a7s.2jpp.4
+- Build with maven
+
+* Fri Aug 31 2007 Deepak Bhole <dbhole@redhat.com> 1.0-0.1.a7s.2jpp.3
+- Build without maven (to build on ppc)
+
+* Tue Mar 20 2007 Deepak Bhole <dbhole@redhat.com> 1.0-0.1.a7s.2jpp.2
+- Build with maven
+
+* Fri Feb 23 2007 Tania Bento <tbento@redhat.com> 0:1.0-0.1.a7s.2jpp.1
+- Fixed %%Release.
+- Fixed %%BuildRoot.
+- Fixed %%Vendor.
+- Fixed %%Distribution.
+- Fixed instructions on how to generate source drop.
+- Removed %%post and %%postun sections for javadoc.
+- Made sure lines had less than 80 characters.
+- Changed to use cp -p to preserve timestamps.
+
+* Tue Oct 17 2006 Deepak Bhole <dbhole@redhat.com> 1.0-0.a7s.2jpp
+- Update for maven2 9jpp
+
+* Thu Sep 07 2006 Deepak Bhole <dbhole@redhat.com> 1.0-0.a7s.1jpp
+- Initial build
