@@ -1,5 +1,3 @@
-usr/lib/rpm/javapackages-tools.sh prov
-usr/lib/rpm/javapackages-tools.sh prov
 %{?_javapackages_macros:%_javapackages_macros}
 %define parent plexus
 %define subname bsh-factory
