@@ -4,9 +4,10 @@
 
 Name:           %{parent}-%{subname}
 Version:        1.0
-Release:        0.13.a7.0%{?dist}
+Release:        0.14.a7.1
 Epoch:          0
 Summary:        Plexus Bsh component factory
+Group:          Development/Java
 License:        MIT
 URL:            http://plexus.codehaus.org/
 BuildArch:      noarch
@@ -49,7 +50,7 @@ cp -p %{SOURCE3} .
 %mvn_install
 %if 0%{?fedora}
 %else
-sed -i "s|1.0-alpha-7|1.0.alpha.7|" %{buildroot}%{_mavendepmapfragdir}/*
+sed -i "s|1.0-alpha-7|1.0.alpha.7|" %{buildroot}%{_datadir}/maven-metadata/*
 %endif
 
 %files -f .mfiles
