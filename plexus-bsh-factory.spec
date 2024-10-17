@@ -9,7 +9,7 @@ Epoch:          0
 Summary:        Plexus Bsh component factory
 Group:          Development/Java
 License:        MIT
-URL:            http://plexus.codehaus.org/
+URL:            https://plexus.codehaus.org/
 BuildArch:      noarch
 # svn export svn://svn.plexus.codehaus.org/plexus/tags/plexus-bsh-factory-1.0-alpha-7-SNAPSHOT plexus-bsh-factory/
 # tar czf plexus-bsh-factory-src.tar.gz plexus-bsh-factory/
